@@ -32,7 +32,11 @@
     <packaging>bundle</packaging>
 
     <dependencies>
-
+        <dependency>
+            <groupId>org.json.wso2</groupId>
+            <artifactId>json</artifactId>
+            <version>${json.wso2.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.wso2.carbon</groupId>
             <artifactId>org.wso2.carbon.logging</artifactId>
@@ -69,6 +73,11 @@
             <artifactId>org.wso2.carbon.utils</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.6</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -96,8 +105,8 @@
                             org.apache.commons.logging,
                             org.slf4j,
                             javax.servlet,
-                            org.apache.commons.lang,
-                            org.wso2.carbon.tomcat.ext.valves,
+                            javax.servlet.http,
+                            com.google.gson
                         </Import-Package>
                     </instructions>
                 </configuration>

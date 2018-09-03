@@ -18,10 +18,9 @@
 
 package org.wso2.carbon.identity.ext.servlet.filter;
 
-//import com.google.gson.Gson;
+import com.google.gson.Gson;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.MDC;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
@@ -33,30 +32,29 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+
 /**
  * Servlet filter used to attach request correlation ID to the diagnostic context.
- *
- *
  */
 public class RequestCorrelationIdFilter implements Filter {
 
     private static final String HEADER_TO_CORRELATION_ID_MAPPING = "HeaderToCorrelationIdMapping";
     private static final String CORRELATION_ID_MDC = "Correlation-ID";
     private Map<String, String> headerToIdMapping;
-    private String correlationIdMdc = "Correlation-ID";
+    private String correlationIdMdc = CORRELATION_ID_MDC;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        if (filterConfig.getInitParameter(HEADER_TO_CORRELATION_ID_MAPPING) != null) {
+            Gson gson = new Gson();
+            headerToIdMapping = gson.fromJson(filterConfig.getInitParameter(HEADER_TO_CORRELATION_ID_MAPPING),
+                    Map.class);
 
-//        if (filterConfig.getInitParameter(HEADER_TO_CORRELATION_ID_MAPPING) != null) {
-//            Gson gson = new Gson();
-//            headerToIdMapping = gson.fromJson(filterConfig.getInitParameter(HEADER_TO_CORRELATION_ID_MAPPING),
-//                    Map.class);
-//        }
-//
-//        if (StringUtils.isNotEmpty(filterConfig.getInitParameter(CORRELATION_ID_MDC))) {
-//            correlationIdMdc = filterConfig.getInitParameter(CORRELATION_ID_MDC);
-//        }
+        }
+
+        if (StringUtils.isNotEmpty(filterConfig.getInitParameter(CORRELATION_ID_MDC))) {
+            correlationIdMdc = filterConfig.getInitParameter(CORRELATION_ID_MDC);
+        }
     }
 
     @Override
@@ -79,7 +77,7 @@ public class RequestCorrelationIdFilter implements Filter {
 
         if (headerToIdMapping != null) {
             for (String correlationIdName : headerToIdMapping.values()) {
-//                MDC.remove(correlationIdName);
+                MDC.remove(correlationIdName);
             }
         }
     }
