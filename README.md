@@ -55,9 +55,11 @@ log4j.appender.TIME_LOG = org.apache.log4j.RollingFileAppender
 log4j.appender.TIME_LOG.File = ${carbon.home}/repository/logs/${instance.log}/timing${instance.log}.log
 log4j.appender.TIME_LOG.Append = false
 log4j.appender.TIME_LOG.layout = org.apache.log4j.PatternLayout
-log4j.appender.TIME_LOG.layout.ConversionPattern=[%X{Correlation-ID}] %t - %m%n
+log4j.appender.TIME_LOG.layout.ConversionPattern=[%X{somecorId}] [%X{Correlation-ID}] %t - %m%n
 ```
 
+'somecorId' can be changed according to the value added in init parameters in 
+repository/conf/tomcat/web.xml which is shown below.
 
 ### Request correlation ID
 
@@ -69,6 +71,10 @@ log4j.appender.TIME_LOG.layout.ConversionPattern=[%X{Correlation-ID}] %t - %m%n
     <filter>
         <filter-name>RequestCorrelationIdFilter</filter-name>
         <filter-class>org.wso2.carbon.identity.ext.servlet.filter.RequestCorrelationIdFilter</filter-class>
+        <init-param>
+               <param-name>HeaderToCorrelationIdMapping</param-name>
+               <param-value>{'someheader':'somecorId','x-corId':'Correlation-ID'}</param-value>
+         </init-param>
     </filter>
      <filter-mapping>
         <filter-name>RequestCorrelationIdFilter</filter-name>
@@ -76,6 +82,10 @@ log4j.appender.TIME_LOG.layout.ConversionPattern=[%X{Correlation-ID}] %t - %m%n
     </filter-mapping>
 
 ```
+
+Here 'someheader' would be the custom header you need to send along with an ID
+that you need to show in the log, similarly x-corId also would be the same. 
+
 
 3. Change the following pattern in the "repository/conf/log4.properties"
 
