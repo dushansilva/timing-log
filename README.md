@@ -97,3 +97,17 @@ log4j.appender.CARBON_CONSOLE.layout.ConversionPattern=[%d] %P%5p {%c} - %x [%X{
 log4j.appender.CARBON_LOGFILE.layout.ConversionPattern=TID: [%T] [%S] [%d] %P%5p {%c} - %x [%X{Correlation-ID}] %m %n   
 
 ```
+
+##For APIM with IS-KM
+
+1. Follow the above steps
+2. In management console of apim under Configure -> Message Tracing, tick
+"Enable Message Tracing" option
+3. In Configure -> Logging set org.wso2.carbon.apimgt.gateway.handlers.ext.APIManagerExtensionHandler
+log level to DEBUG
+4. In is-km management console, go to Configure -> Logging and set
+org.wso2.carbon.apimgt.keymgt.service.APIKeyValidationService log level to DEBUG
+
+For more information refer 
+https://dinushasblog.blogspot.com/2013/12/message-tracing-with-wso2-api-manager.html
+
