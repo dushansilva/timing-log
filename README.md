@@ -101,6 +101,7 @@ log4j.appender.CARBON_LOGFILE.layout.ConversionPattern=TID: [%T] [%S] [%d] %P%5p
 ##For APIM with IS-KM
 
 1. Follow the above steps
+2. Replace someheader with activityid
 2. In management console of apim under Configure -> Message Tracing, tick
 "Enable Message Tracing" option
 3. In Configure -> Logging set org.wso2.carbon.apimgt.gateway.handlers.ext.APIManagerExtensionHandler
