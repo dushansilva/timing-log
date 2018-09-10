@@ -51,6 +51,7 @@ e.g. in master-datasource.xml
 # Appender config to put Time Log.
 log4j.logger.TIME_LOG=DEBUG, TIME_LOG
 log4j.additivity.TIME_LOG=false
+log4j.appender.file.MaxFileSize=10MB
 log4j.appender.TIME_LOG = org.apache.log4j.RollingFileAppender
 log4j.appender.TIME_LOG.File = ${carbon.home}/repository/logs/${instance.log}/timing${instance.log}.log
 log4j.appender.TIME_LOG.Append = false
@@ -98,7 +99,7 @@ log4j.appender.CARBON_LOGFILE.layout.ConversionPattern=TID: [%T] [%S] [%d] %P%5p
 
 ```
 
-###For APIM with IS-KM
+### For APIM with IS-KM
 
 1. Follow the above steps
 2. Replace someheader with activityid

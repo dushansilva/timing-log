@@ -21,6 +21,8 @@ package org.wso2.carbon.identity.ext.servlet.filter;
 import com.google.gson.Gson;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.MDC;
+import org.wso2.carbon.base.ServerConfiguration;
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
