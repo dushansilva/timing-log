@@ -105,6 +105,7 @@
                             javax.servlet,
                             org.apache.commons.lang,
                             org.apache.tomcat.jdbc.pool.*,
+                            com.google.gson
                         </Import-Package>
                     </instructions>
                 </configuration>

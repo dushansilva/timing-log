@@ -53,14 +53,12 @@ public class RequestCorrelationIdFilter implements Filter {
             Gson gson = new Gson();
             headerToIdMapping = gson.fromJson(filterConfig.getInitParameter(HEADER_TO_CORRELATION_ID_MAPPING),
                     Map.class);
-
         }
 
         if (filterConfig.getInitParameter(QUERY_TO_CORRELATION_ID_MAPPING) != null) {
             Gson gson = new Gson();
             queryToIdMapping = gson.fromJson(filterConfig.getInitParameter(QUERY_TO_CORRELATION_ID_MAPPING),
                     Map.class);
-
         }
 
         if (StringUtils.isNotEmpty(filterConfig.getInitParameter(CORRELATION_ID_MDC))) {
@@ -71,7 +69,6 @@ public class RequestCorrelationIdFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
-
         try {
             associateHeadersToThread(servletRequest);
             if (MDC.get(correlationIdMdc) == null) {
@@ -85,7 +82,6 @@ public class RequestCorrelationIdFilter implements Filter {
     }
 
     private void disAssociateHeadersFromThread() {
-
         if (headerToIdMapping != null) {
             for (String correlationIdName : headerToIdMapping.values()) {
                 MDC.remove(correlationIdName);
@@ -94,7 +90,6 @@ public class RequestCorrelationIdFilter implements Filter {
     }
 
     private void associateQueryParamsToThread(ServletRequest servletRequest) {
-
         if (queryToIdMapping != null && (servletRequest instanceof HttpServletRequest)) {
             HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
 
@@ -113,7 +108,6 @@ public class RequestCorrelationIdFilter implements Filter {
     }
 
     private void associateHeadersToThread(ServletRequest servletRequest) {
-
         if (headerToIdMapping != null && (servletRequest instanceof HttpServletRequest)) {
             HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
 
@@ -136,7 +130,6 @@ public class RequestCorrelationIdFilter implements Filter {
 
     private void setHeaderCorrelationIdValue(String headerReceived, String headerConfigured,
                                              HttpServletRequest httpServletRequest, String correlationIdName) {
-
         if (StringUtils.isNotEmpty(headerReceived) && headerReceived.equalsIgnoreCase(headerConfigured)) {
             String headerValue = httpServletRequest.getHeader(headerReceived);
             if (StringUtils.isNotEmpty(headerValue)) {
@@ -147,7 +140,6 @@ public class RequestCorrelationIdFilter implements Filter {
 
     private void setQueryCorrelationIdValue(String queryReceived, String queryConfigured,
                                             HttpServletRequest httpServletRequest, String correlationIdName) {
-
         if (StringUtils.isNotEmpty(queryReceived) && queryReceived.equalsIgnoreCase(queryConfigured)) {
             String queryValue = httpServletRequest.getParameter(queryReceived);
             if (StringUtils.isNotEmpty(queryValue)) {

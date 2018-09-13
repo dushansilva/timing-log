@@ -18,21 +18,25 @@
 
 package org.wso2.carbon.identity.ext.jdbc.pool.interceptor;
 
+import com.google.gson.Gson;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tomcat.jdbc.pool.interceptor.AbstractQueryReport;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
  * Time-Logging interceptor for JDBC pool.
  * Logs the time taken to execute the query in each pool-ed connection.
  */
-public class TimeLogInterceptor extends AbstractQueryReport{
+public class TimeLogInterceptor extends AbstractQueryReport {
 
     private static final Log timeLog = LogFactory.getLog("TIME_LOG");
 
@@ -52,35 +56,110 @@ public class TimeLogInterceptor extends AbstractQueryReport{
     }
 
     @Override
-    protected String reportQuery(String query, Object[] args, String name, long start, long delta) {
-
-        String queryDetail = super.reportQuery(query, args, name, start, delta);
-        if (timeLog.isDebugEnabled()) {
-            timeLog.debug("Query " + queryDetail + " at " + start + " took " + delta + "ms");
-        }
-        return queryDetail;
-    }
-
-    @Override
     public Object createStatement(Object proxy, Method method, Object[] args, Object statement, long time) {
-        Object createStatement = super.createStatement(proxy, method, args, statement, time);
         try {
-            if (statement instanceof PreparedStatement) {
-                DatabaseMetaData metaData = ((PreparedStatement) statement).getConnection().getMetaData();
-                if (timeLog.isDebugEnabled()) {
-                    timeLog.debug("Connection String" + metaData.getURL());
+            Object result = null;
+            String name = method.getName();
+            String sql = null;
+            Constructor<?> constructor = null;
+            if (this.compare("createStatement", name)) {
+                constructor = this.getConstructor(0, Statement.class);
+            } else if (this.compare("prepareStatement", name)) {
+                sql = (String) args[0];
+                constructor = this.getConstructor(1, PreparedStatement.class);
+                if (sql != null) {
+                    this.prepareStatement(sql, time);
                 }
+            } else {
+                if (!this.compare("prepareCall", name)) {
+                    return statement;
+                }
+                sql = (String) args[0];
+                constructor = this.getConstructor(2, CallableStatement.class);
+                this.prepareCall(sql, time);
             }
-        } catch (Exception e) {
-            timeLog.error("Cannot get connection string ");
+            result = constructor.newInstance(new StatementProxy(statement, sql));
+            return result;
+        } catch (Exception var11) {
+            timeLog.warn("Unable to create statement proxy for slow query report.", var11);
+            return statement;
         }
-        return createStatement;
 
     }
 
+    protected class StatementProxy implements InvocationHandler {
+        protected boolean closed = false;
+        protected Object delegate;
+        protected final String query;
 
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        return super.invoke(proxy, method, args);
+        public StatementProxy(Object parent, String query) {
+            this.delegate = parent;
+            this.query = query;
+        }
+
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            String name = method.getName();
+            boolean close = TimeLogInterceptor.this.compare("close", name);
+            if (close && this.closed) {
+                return null;
+            } else if (TimeLogInterceptor.this.compare("isClosed", name)) {
+                return this.closed;
+            } else if (this.closed) {
+                throw new SQLException("Statement closed.");
+            } else {
+                boolean process = false;
+                process = TimeLogInterceptor.this.isExecute(method, process);
+                long start = process ? System.currentTimeMillis() : 0L;
+                Object result = null;
+
+                try {
+                    result = method.invoke(this.delegate, args);
+                } catch (Throwable var13) {
+                    TimeLogInterceptor.this.reportFailedQuery(this.query, args, name, start, var13);
+                    if (var13 instanceof InvocationTargetException && var13.getCause() != null) {
+                        throw var13.getCause();
+                    }
+
+                    throw var13;
+                }
+
+                long delta = process ? System.currentTimeMillis() - start : -9223372036854775808L;
+
+                if (process) {
+                    TimeLogInterceptor.this.reportQuery(this.query, args, name, start, delta);
+                }
+
+
+                logQuery(start, delta);
+                if (close) {
+                    this.closed = true;
+                    this.delegate = null;
+                }
+
+                return result;
+            }
+        }
+
+        private void logQuery(long start, long delta) {
+            try {
+                if (delegate instanceof PreparedStatement) {
+                    PreparedStatement preparedStatement = (PreparedStatement) this.delegate;
+                    if (preparedStatement.getConnection() != null) {
+                        DatabaseMetaData metaData = preparedStatement.getConnection().getMetaData();
+                        if (timeLog.isDebugEnabled()) {
+                            Gson gson = new Gson();
+                            Map<String, String> log = new HashMap<>();
+                            log.put("query", this.query);
+                            log.put("startTime", Long.toString(start));
+                            log.put("delta", Long.toString(delta));
+                            log.put("connectionUrl", metaData.getURL());
+                            timeLog.debug(gson.toJson(log));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                timeLog.error("Cannot get connection string ");
+            }
+        }
     }
 }
