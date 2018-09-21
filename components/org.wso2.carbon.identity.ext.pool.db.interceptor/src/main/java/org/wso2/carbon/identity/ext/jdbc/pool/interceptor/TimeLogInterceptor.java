@@ -114,6 +114,7 @@ public class TimeLogInterceptor extends AbstractQueryReport {
                 } else {
                     boolean process = false;
                     process = TimeLogInterceptor.this.isExecute(method, process);
+
                     long start = process ? System.currentTimeMillis() : 0L;
                     Object result = null;
 
@@ -124,8 +125,8 @@ public class TimeLogInterceptor extends AbstractQueryReport {
 
                     if (process) {
                         TimeLogInterceptor.this.reportQuery(this.query, args, name, start, delta);
+                        logQuery(start, delta, name);
                     }
-                    logQuery(start, delta);
 
                     if (close) {
                         this.closed = true;
@@ -142,7 +143,7 @@ public class TimeLogInterceptor extends AbstractQueryReport {
 
         }
 
-        private void logQuery(long start, long delta) {
+        private void logQuery(long start, long delta, String methodName) {
             try {
                 if (this.delegate instanceof PreparedStatement) {
                     PreparedStatement preparedStatement = (PreparedStatement) this.delegate;
@@ -155,6 +156,7 @@ public class TimeLogInterceptor extends AbstractQueryReport {
                             log.put("startTime", Long.toString(start));
                             log.put("delta", Long.toString(delta) + " ms");
                             log.put("connectionUrl", metaData.getURL());
+                            log.put("methodName", methodName);
                             timeLog.debug(toJson(log));
                         }
                     }
