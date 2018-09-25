@@ -151,13 +151,13 @@ public class TimeLogInterceptor extends AbstractQueryReport {
                         DatabaseMetaData metaData = preparedStatement.getConnection().getMetaData();
                         if (timeLog.isDebugEnabled()) {
                             Map<String, String> log = new LinkedHashMap<>();
-                            log.put("callType", "jdbc");
-                            log.put("query", this.query);
-                            log.put("startTime", Long.toString(start));
                             log.put("delta", Long.toString(delta) + " ms");
-                            log.put("connectionUrl", metaData.getURL());
+                            log.put("callType", "jdbc");
+                            log.put("startTime", Long.toString(start));
                             log.put("methodName", methodName);
-                            timeLog.debug(toJson(log));
+                            log.put("query", this.query);
+                            log.put("connectionUrl", metaData.getURL());
+                            timeLog.debug(createLogFormat(log));
                         }
                     }
                 }
@@ -184,6 +184,19 @@ public class TimeLogInterceptor extends AbstractQueryReport {
                 }
             }
             sb.append("}");
+
+            return sb.toString();
+        }
+
+        private String createLogFormat(Map<String, String> map) {
+            StringBuilder sb = new StringBuilder();
+            Object[] keys = map.keySet().toArray();
+            for (int i = 0; i < keys.length; i++) {
+                sb.append(map.get(keys[i]));
+                if (i < keys.length - 1) {
+                    sb.append("|");
+                }
+            }
 
             return sb.toString();
         }
