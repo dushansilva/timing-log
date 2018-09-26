@@ -1,79 +1,56 @@
-/*
- * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
- *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
-package org.wso2.carbon.identity.ext.servlet.filter;
+package org.wso2.carbon.identity.ext.servlet.valve;
 
 import com.google.gson.Gson;
+import org.apache.catalina.connector.Request;
+import org.apache.catalina.connector.Response;
+import org.apache.catalina.valves.ValveBase;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.MDC;
 
-import java.io.IOException;
-import java.util.*;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.UUID;
 
-
-/**
- * Servlet filter used to attach request correlation ID to the diagnostic context.
- */
-public class RequestCorrelationIdFilter implements Filter {
-
+public class RequestCorrelationIdValve extends ValveBase {
     private static final String HEADER_TO_CORRELATION_ID_MAPPING = "HeaderToCorrelationIdMapping";
     private static final String QUERY_TO_CORRELATION_ID_MAPPING = "QueryToCorrelationIdMapping";
     private static final String CORRELATION_ID_MDC = "Correlation-ID";
     private Map<String, String> headerToIdMapping;
     private Map<String, String> queryToIdMapping;
     private String correlationIdMdc = CORRELATION_ID_MDC;
+    private String headerToCorrelationIdMapping;
+    private String queryToCorrelationIdMapping;
+    private String configuredCorrelationIdMdc;
 
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    private void initialize() {
 
-        if (filterConfig.getInitParameter(HEADER_TO_CORRELATION_ID_MAPPING) != null) {
-            Gson gson = new Gson();
-            headerToIdMapping = gson.fromJson(filterConfig.getInitParameter(HEADER_TO_CORRELATION_ID_MAPPING),
-                    Map.class);
+        Gson gson = new Gson();
+        if (StringUtils.isNotEmpty(headerToCorrelationIdMapping)) {
+            headerToIdMapping = gson.fromJson(this.headerToCorrelationIdMapping, Map.class);
         }
 
-        if (filterConfig.getInitParameter(QUERY_TO_CORRELATION_ID_MAPPING) != null) {
-            Gson gson = new Gson();
-            queryToIdMapping = gson.fromJson(filterConfig.getInitParameter(QUERY_TO_CORRELATION_ID_MAPPING),
-                    Map.class);
+        if (StringUtils.isNotEmpty(queryToCorrelationIdMapping)) {
+            queryToIdMapping = gson.fromJson(this.queryToCorrelationIdMapping, Map.class);
         }
 
-        if (StringUtils.isNotEmpty(filterConfig.getInitParameter(CORRELATION_ID_MDC))) {
-            correlationIdMdc = filterConfig.getInitParameter(CORRELATION_ID_MDC);
+        if (StringUtils.isNotEmpty(configuredCorrelationIdMdc)) {
+            correlationIdMdc = configuredCorrelationIdMdc;
         }
     }
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
-            throws IOException, ServletException {
+    public void invoke(Request request, Response response) throws IOException, ServletException {
         try {
-            associateHeadersToThread(servletRequest);
+            initialize();
+            associateHeadersToThread(request);
             if (MDC.get(correlationIdMdc) == null) {
                 MDC.put(correlationIdMdc, UUID.randomUUID().toString());
             }
-            filterChain.doFilter(servletRequest, servletResponse);
+            getNext().invoke(request, response);
         } finally {
             disAssociateHeadersFromThread();
             MDC.remove(correlationIdMdc);
@@ -147,8 +124,15 @@ public class RequestCorrelationIdFilter implements Filter {
         }
     }
 
-    @Override
-    public void destroy() {
+    public void setHeaderToCorrelationIdMapping(String headerToCorrelationIdMapping) {
+        this.headerToCorrelationIdMapping = headerToCorrelationIdMapping;
+    }
 
+    public void setQueryToCorrelationIdMapping(String queryToCorrelationIdMapping) {
+        this.queryToCorrelationIdMapping = queryToCorrelationIdMapping;
+    }
+
+    public void setConfiguredCorrelationIdMdc(String configuredCorrelationIdMdc) {
+        this.configuredCorrelationIdMdc = configuredCorrelationIdMdc;
     }
 }

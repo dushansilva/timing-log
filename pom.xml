@@ -35,7 +35,7 @@
     
 
     <modules>
-        <module>components/org.wso2.carbon.identity.ext.servlet.filter</module>
+        <module>components/org.wso2.carbon.identity.ext.servlet.valve</module>
         <module>components/org.wso2.carbon.identity.ext.pool.db.interceptor</module>
         <module>components/org.wso2.carbon.identity.ext.ldap</module>
     </modules>

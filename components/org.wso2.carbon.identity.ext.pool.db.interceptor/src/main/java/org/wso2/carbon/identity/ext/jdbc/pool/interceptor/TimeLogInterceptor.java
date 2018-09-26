@@ -166,35 +166,13 @@ public class TimeLogInterceptor extends AbstractQueryReport {
             }
         }
 
-        private String toJson(Map<String, String> map) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("{");
-            Object[] keys = map.keySet().toArray();
-            for (int i = 0; i < keys.length; i++) {
-                sb.append("\"");
-                sb.append(keys[i]);
-                sb.append("\"");
-                sb.append(":");
-                sb.append("\"");
-                sb.append(map.get(keys[i]));
-                sb.append("\"");
-
-                if (i < keys.length - 1) {
-                    sb.append(",");
-                }
-            }
-            sb.append("}");
-
-            return sb.toString();
-        }
-
         private String createLogFormat(Map<String, String> map) {
             StringBuilder sb = new StringBuilder();
             Object[] keys = map.keySet().toArray();
             for (int i = 0; i < keys.length; i++) {
                 sb.append(map.get(keys[i]));
                 if (i < keys.length - 1) {
-                    sb.append("|");
+                    sb.append(" | ");
                 }
             }
 

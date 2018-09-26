@@ -27,8 +27,8 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.wso2.carbon.identity.ext.servlet.filter</artifactId>
-    <name>Request correlation filter</name>
+    <artifactId>org.wso2.carbon.identity.ext.servlet.valve</artifactId>
+    <name>Request correlation valve</name>
     <packaging>bundle</packaging>
 
     <dependencies>
@@ -95,18 +95,22 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
-                            org.wso2.carbon.identity.ext.servlet.filter.internal
+                            org.wso2.carbon.identity.ext.servlet.valve.internal
                         </Private-Package>
                         <Export-Package>
-                            !org.wso2.carbon.identity.ext.servlet.filter.internal,
-                            org.wso2.carbon.identity.ext.servlet.filter.*
+                            !org.wso2.carbon.identity.ext.servlet.valve.internal,
+                            org.wso2.carbon.identity.ext.servlet.valve.*
                         </Export-Package>
                         <Import-Package>
                             org.apache.commons.logging,
                             org.slf4j,
                             javax.servlet,
                             javax.servlet.http,
-                            com.google.gson
+                            com.google.gson,
+                            org.apache.catalina.valves.*,
+                            org.apache.catalina,
+                            org.apache.catalina.connector,
+                            org.apache.commons.lang,
                         </Import-Package>
                     </instructions>
                 </configuration>
