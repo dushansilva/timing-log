@@ -45,47 +45,35 @@ e.g. in master-datasource.xml
         </datasource>
 ```
 
-4. Add time-log as rolling file appender in log4j.properties
+4. Add correlation-log as rolling file appender in log4j.properties
 ```properties
-# Appender config to put Time Log.
-# Appender config to put Time Log.
-log4j.logger.TIME_LOG=DEBUG, TIME_LOG
-log4j.additivity.TIME_LOG=false
-log4j.appender.file.MaxFileSize=10MB
-log4j.appender.TIME_LOG = org.apache.log4j.RollingFileAppender
-log4j.appender.TIME_LOG.File = ${carbon.home}/repository/logs/${instance.log}/timing${instance.log}.log
-log4j.appender.TIME_LOG.Append = false
-log4j.appender.TIME_LOG.layout = org.apache.log4j.PatternLayout
+# Appender config to put correlation Log.
+log4j.logger.CORRELATION_LOG=DEBUG, CORRELATION_LOG
+log4j.additivity.CORRELATION_LOG=false
+log4j.appender.CORRELATION_LOG = org.apache.log4j.RollingFileAppender
+log4j.appender.CORRELATION_LOG.File = ${carbon.home}/repository/logs/${instance.log}/correlation${instance.log}.log
+log4j.appender.CORRELATION_LOG.Append = false
+log4j.appender.CORRELATION_LOG.layout = org.apache.log4j.PatternLayout
 log4j.appender.TIME_LOG.layout.ConversionPattern=[%X{somecorId}] [%X{Correlation-ID}] %t - %m%n
 ```
 
-'somecorId' can be changed according to the value added in init parameters in 
-repository/conf/tomcat/web.xml which is shown below.
+'somecorId' can be changed according to the value added under Host in
+repository/conf/tomcat/catalina-server.xml which is shown below.
 
 ### Request correlation ID
 
-1. Copy "org.wso2.carbon.identity.ext.servlet.filter-0.0.1-SNAPSHOT.jar" to dropins
+1. Copy "org.wso2.carbon.identity.ext.servlet.valve-0.0.1-SNAPSHOT.jar" to dropins
 
 
-2. Add following to "repository/conf/tomcat/web.xml"
+2. Add following to "repository/conf/tomcat/catalina-server.xml, under <Host>"
 ```xml
-    <filter>
-        <filter-name>RequestCorrelationIdFilter</filter-name>
-        <filter-class>org.wso2.carbon.identity.ext.servlet.filter.RequestCorrelationIdFilter</filter-class>
-        <init-param>
-               <param-name>HeaderToCorrelationIdMapping</param-name>
-               <param-value>{'someheader':'somecorId','x-corId':'Correlation-ID'}</param-value>
-         </init-param>
-    </filter>
-     <filter-mapping>
-        <filter-name>RequestCorrelationIdFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
+ <Valve className="org.wso2.carbon.identity.ext.servlet.valve.RequestCorrelationIdValve" 
+        headerToCorrelationIdMapping="{'someheader':'somecorId','activityid':'Correlation-ID'}"/>
 
 ```
 
 Here 'someheader' would be the custom header you need to send along with an ID
-that you need to show in the log, similarly x-corId also would be the same. 
+that you need to show in the log, similarly activityid also would be the same. 
 
 
 3. Change the following pattern in the "repository/conf/log4.properties"
