@@ -21,7 +21,6 @@ package org.wso2.carbon.identity.ext.jdbc.pool.interceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tomcat.jdbc.pool.interceptor.AbstractQueryReport;
-import org.wso2.carbon.utils.CarbonUtils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
@@ -37,7 +36,7 @@ import java.util.Map;
  */
 public class TimeLogInterceptor extends AbstractQueryReport {
 
-    private static final Log timeLog = LogFactory.getLog("TIME_LOG");
+    private static final Log correlationLog = LogFactory.getLog("CORRELATION_LOG");
 
     @Override
     public void closeInvoked() {
@@ -57,16 +56,14 @@ public class TimeLogInterceptor extends AbstractQueryReport {
     @Override
     public Object createStatement(Object proxy, Method method, Object[] args, Object statement, long time) {
         try {
-            if (CarbonUtils.getServerConfiguration().getFirstProperty("EnableTimingLogs")
-                    .equalsIgnoreCase("true")) {
-
+            if (System.getProperty("enableCorrelationLogs").equalsIgnoreCase("true")) {
                 return invokeProxy(method, args, statement, time);
             } else {
                 return statement;
             }
 
         } catch (Exception var11) {
-            timeLog.warn("Unable to create statement proxy for slow query report.");
+            correlationLog.warn("Unable to create statement proxy for slow query report.");
             return statement;
         }
     }
@@ -136,11 +133,9 @@ public class TimeLogInterceptor extends AbstractQueryReport {
                     return result;
                 }
             } catch (Exception e) {
-                timeLog.error("Unable get query run-time");
+                correlationLog.error("Unable get query run-time");
                 return null;
             }
-
-
         }
 
         private void logQuery(long start, long delta, String methodName) {
@@ -149,7 +144,7 @@ public class TimeLogInterceptor extends AbstractQueryReport {
                     PreparedStatement preparedStatement = (PreparedStatement) this.delegate;
                     if (preparedStatement.getConnection() != null) {
                         DatabaseMetaData metaData = preparedStatement.getConnection().getMetaData();
-                        if (timeLog.isDebugEnabled()) {
+                        if (correlationLog.isDebugEnabled()) {
                             Map<String, String> log = new LinkedHashMap<>();
                             log.put("delta", Long.toString(delta) + " ms");
                             log.put("callType", "jdbc");
@@ -157,12 +152,12 @@ public class TimeLogInterceptor extends AbstractQueryReport {
                             log.put("methodName", methodName);
                             log.put("query", this.query);
                             log.put("connectionUrl", metaData.getURL());
-                            timeLog.debug(createLogFormat(log));
+                            correlationLog.debug(createLogFormat(log));
                         }
                     }
                 }
             } catch (Exception e) {
-                timeLog.error("Cannot get connection string ");
+                correlationLog.error("Cannot get connection string ");
             }
         }
 
@@ -180,3 +175,4 @@ public class TimeLogInterceptor extends AbstractQueryReport {
         }
     }
 }
+
